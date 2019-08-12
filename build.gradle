@@ -1,0 +1,107 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenLocal()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.bmuschko:gradle-cargo-plugin:2.6.1'
+        classpath "org.hibernate:hibernate-gradle-plugin:5.4.3.Final"
+        classpath 'net.ltgt.gradle:gradle-apt-plugin:0.18'
+    }
+}
+
+plugins {
+    id 'war'
+    id "net.ltgt.apt" version "0.21"
+    id 'io.franzbecker.gradle-lombok' version '1.14'
+}
+
+apply plugin: 'com.bmuschko.cargo'
+apply plugin: 'org.hibernate.orm'
+apply plugin: 'net.ltgt.apt'
+apply plugin: 'net.ltgt.apt-idea'
+
+
+sourceCompatibility = '11'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+}
+
+
+hibernate {
+    enhance {
+        enableLazyInitialization = false
+        enableDirtyTracking = false
+        enableAssociationManagement = false
+        enableExtendedEnhancement = false
+    }
+}
+
+dependencies {
+    cargo 'org.codehaus.cargo:cargo-core-uberjar:1.7.3',
+            'org.codehaus.cargo:cargo-ant:1.7.3'
+
+    providedCompile 'javax.servlet:javax.servlet-api:4.0.0'
+    compile 'javax.websocket:javax.websocket-api:1.1'
+    compile group: 'javax.servlet', name: 'jstl', version: '1.2'
+    compile group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
+
+    compileOnly 'org.projectlombok:lombok:1.18.6'
+    annotationProcessor 'org.projectlombok:lombok:1.18.6'
+
+    compile group: 'org.postgresql', name: 'postgresql', version: '42.2.5'
+
+    compile group: 'javax.mail', name: 'javax.mail-api', version: '1.6.1'
+
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.8.5'
+
+    compile 'org.hibernate:hibernate-core:5.4.3.Final'
+    implementation 'org.hibernate.validator:hibernate-validator:6.0.16.Final'
+    annotationProcessor 'org.hibernate:hibernate-jpamodelgen:5.4.3.Final'
+
+    compile 'org.apache.commons:commons-lang3:3.8.1'
+
+    compile 'com.github.oshi:oshi-core:3.13.0'
+
+    compile 'org.apache.poi:poi:4.0.1'
+
+    compile 'org.jooq:jooq:3.11.10'
+    compile 'org.jooq:jooq-meta:3.11.10'
+    compile 'org.jooq:jooq-codegen:3.11.10'
+
+    compile 'org.pcap4j:pcap4j-core:1.7.6'
+    compile 'org.pcap4j:pcap4j-packetfactory-static:1.7.6'
+
+    testCompile group: 'junit', name: 'junit', version: '4.10'
+}
+
+cargo {
+    containerId = 'tomcat9x'
+    port = 8080
+
+    deployable {
+        context = '/OAS'
+    }
+
+    local {
+        homeDir = file('..//tomcat')
+        outputFile = file('output.log')
+    }
+}
+
+cargoStartLocal.mustRunAfter cargoStopLocal
+build.mustRunAfter clean
+
+task runApplication() {
+    dependsOn clean
+    dependsOn build
+    dependsOn cargoStopLocal
+    dependsOn cargoStartLocal
+    dependsOn build
+
+}
